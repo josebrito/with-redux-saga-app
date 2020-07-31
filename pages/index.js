@@ -1,29 +1,56 @@
-import { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
-import { END } from 'redux-saga'
-import { wrapper } from '../store'
-import { loadData, startClock, tickClock } from '../actions'
-import Page from '../components/page'
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { END } from "redux-saga";
+import { wrapper } from "../store";
+import { loadData, startClock, tickClock, loadData2 } from "../actions";
+import withCenas from "../components/withCenas";
+import withCenasSSP from "../components/withCenasSSP";
 
 const Index = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  const placeholderData = useSelector((state) => state.placeholderData);
+  const moreData = useSelector((state) => state.moreData);
 
-  useEffect(() => {
-    dispatch(startClock())
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(loadData());
+  // }, []);
 
-  return <Page title="Index Page" linkTo="/other" NavigateTo="Other Page" />
-}
+  return (
+    <div>
+      <h1>hello</h1>
+      <p>world</p>
+      <p>{JSON.stringify(moreData || {})?.substr(0, 100)}</p>
+      <p>{JSON.stringify(placeholderData || {})?.substr(0, 100)}</p>
+    </div>
+  );
+};
 
-export const getStaticProps = wrapper.getStaticProps(async ({ store }) => {
-  store.dispatch(tickClock(false))
+/*
+Index.getInitialProps = async ({ store }) => {
+  console.log("## INDEX getInitialProps");
 
-  if (!store.getState().placeholderData) {
-    store.dispatch(loadData())
-    store.dispatch(END)
-  }
+  store.dispatch(loadData());
 
-  await store.sagaTask.toPromise()
-})
+  // store.dispatch(END);
+  // await store.sagaTask.toPromise();
 
-export default Index
+  console.log("## INDEX getInitialProps - END");
+};
+*/
+
+export const getServerSideProps = withCenasSSP(
+  wrapper.getServerSideProps(async ({ store, req, res, ...etc }) => {
+    console.log("## INDEX getServerSideProps");
+
+    store.dispatch(loadData());
+
+    store.dispatch(END);
+    await store.sagaTask.toPromise();
+
+    console.log("## INDEX getServerSideProps - END");
+
+    return { props: {} };
+  })
+);
+
+export default withCenas(Index);
